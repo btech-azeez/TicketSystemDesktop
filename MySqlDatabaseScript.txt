@@ -1,0 +1,208 @@
+-- =====================================================
+-- Customer Support Ticket System - MySQL Database Script
+-- =====================================================
+
+DROP DATABASE IF EXISTS TicketSystemDB;
+
+CREATE DATABASE TicketSystemDB
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE TicketSystemDB;
+
+-- =====================================================
+-- TABLE: Users
+-- =====================================================
+CREATE TABLE Users (
+    UserId INT AUTO_INCREMENT PRIMARY KEY,
+    Username VARCHAR(50) NOT NULL UNIQUE,
+    Password VARCHAR(255) NOT NULL,
+    FullName VARCHAR(100) NOT NULL,
+
+    Role ENUM('User','Admin') 
+        NOT NULL DEFAULT 'User',
+
+    Email VARCHAR(100),
+
+    CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    IsActive BOOLEAN DEFAULT TRUE,
+
+    INDEX idx_username (Username),
+    INDEX idx_role (Role),
+    INDEX idx_login (Username, Password)
+
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COMMENT='System users and administrators';
+
+-- =====================================================
+-- TABLE: Tickets
+-- =====================================================
+CREATE TABLE Tickets (
+    TicketId INT AUTO_INCREMENT PRIMARY KEY,
+
+    TicketNumber VARCHAR(20) NOT NULL UNIQUE,
+
+    Subject VARCHAR(200) NOT NULL,
+
+    Description TEXT NOT NULL,
+
+    Priority ENUM('Low','Medium','High')
+        NOT NULL DEFAULT 'Medium',
+
+    Status ENUM('Open','In Progress','Closed')
+        NOT NULL DEFAULT 'Open',
+
+    CreatedBy INT NOT NULL,
+
+    AssignedTo INT NULL,
+
+    CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    LastModifiedDate DATETIME
+        DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT FK_Tickets_CreatedBy
+        FOREIGN KEY (CreatedBy)
+        REFERENCES Users(UserId)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT FK_Tickets_AssignedTo
+        FOREIGN KEY (AssignedTo)
+        REFERENCES Users(UserId)
+        ON DELETE SET NULL,
+
+    INDEX idx_ticket_number (TicketNumber),
+    INDEX idx_status (Status),
+    INDEX idx_priority (Priority),
+    INDEX idx_created_by (CreatedBy),
+    INDEX idx_assigned_to (AssignedTo),
+    INDEX idx_created_date (CreatedDate)
+
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COMMENT='Support tickets';
+
+-- =====================================================
+-- TABLE: TicketStatusHistory
+-- =====================================================
+CREATE TABLE TicketStatusHistory (
+    HistoryId INT AUTO_INCREMENT PRIMARY KEY,
+
+    TicketId INT NOT NULL,
+
+    OldStatus ENUM('Open','In Progress','Closed'),
+
+    NewStatus ENUM('Open','In Progress','Closed')
+        NOT NULL,
+
+    ChangedBy INT NOT NULL,
+
+    ChangedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    Comments TEXT,
+
+    CONSTRAINT FK_History_Ticket
+        FOREIGN KEY (TicketId)
+        REFERENCES Tickets(TicketId)
+        ON DELETE CASCADE,
+
+    CONSTRAINT FK_History_User
+        FOREIGN KEY (ChangedBy)
+        REFERENCES Users(UserId)
+        ON DELETE RESTRICT,
+
+    INDEX idx_history_ticket (TicketId),
+    INDEX idx_changed_date (ChangedDate),
+    INDEX idx_changed_by (ChangedBy)
+
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COMMENT='Ticket status history';
+
+-- =====================================================
+-- TABLE: TicketComments
+-- =====================================================
+CREATE TABLE TicketComments (
+    CommentId INT AUTO_INCREMENT PRIMARY KEY,
+
+    TicketId INT NOT NULL,
+
+    CommentText TEXT NOT NULL,
+
+    CommentedBy INT NOT NULL,
+
+    IsInternal BOOLEAN DEFAULT FALSE,
+
+    CommentDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT FK_Comments_Ticket
+        FOREIGN KEY (TicketId)
+        REFERENCES Tickets(TicketId)
+        ON DELETE CASCADE,
+
+    CONSTRAINT FK_Comments_User
+        FOREIGN KEY (CommentedBy)
+        REFERENCES Users(UserId)
+        ON DELETE RESTRICT,
+
+    INDEX idx_comment_ticket (TicketId),
+    INDEX idx_comment_date (CommentDate),
+    INDEX idx_commented_by (CommentedBy)
+
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COMMENT='Ticket comments';
+
+-- =====================================================
+-- SAMPLE USERS
+-- =====================================================
+INSERT INTO Users 
+(Username, Password, FullName, Role, Email, IsActive)
+VALUES
+('admin', 'admin123', 'System Administrator', 'Admin', 'admin@ticketsystem.com', TRUE),
+('john', 'john@123', 'John Doe', 'User', 'john@gmail.com', TRUE),
+('smith', 'smith@123', 'Jane Smith', 'User', 'smith@gmail.com', TRUE),
+('bob.admin', 'bob@123', 'Bob Anderson', 'Admin', 'bob.anderson@ticketsystem.com', TRUE),
+('pankaj', 'pankaj#123', 'Rohith Pankaj', 'User', 'pankaj@gmail.com', TRUE);
+
+-- =====================================================
+-- SAMPLE TICKETS
+-- =====================================================
+INSERT INTO Tickets
+(TicketNumber, Subject, Description, Priority, Status, CreatedBy, AssignedTo, CreatedDate)
+VALUES
+('TKT-00001','Cannot login','Login issue','High','Open',2,NULL,DATE_SUB(NOW(),INTERVAL 2 HOUR)),
+('TKT-00002','Export feature','Export to Excel','Medium','In Progress',3,1,DATE_SUB(NOW(),INTERVAL 1 DAY)),
+('TKT-00003','Crash issue','App crash','High','Closed',2,4,DATE_SUB(NOW(),INTERVAL 3 DAY)),
+('TKT-00004','Slow system','Performance issue','Medium','Open',5,NULL,DATE_SUB(NOW(),INTERVAL 5 HOUR)),
+('TKT-00005','Email issue','Email not working','Low','In Progress',3,1,DATE_SUB(NOW(),INTERVAL 6 HOUR));
+
+-- =====================================================
+-- SAMPLE HISTORY
+-- =====================================================
+INSERT INTO TicketStatusHistory
+(TicketId, OldStatus, NewStatus, ChangedBy, ChangedDate, Comments)
+VALUES
+(1,NULL,'Open',2,DATE_SUB(NOW(),INTERVAL 2 HOUR),'Created'),
+(2,NULL,'Open',3,DATE_SUB(NOW(),INTERVAL 1 DAY),'Created'),
+(2,'Open','In Progress',1,DATE_SUB(NOW(),INTERVAL 20 HOUR),'Assigned'),
+(3,NULL,'Open',2,DATE_SUB(NOW(),INTERVAL 3 DAY),'Created'),
+(3,'Open','In Progress',4,DATE_SUB(NOW(),INTERVAL 2 DAY),'Investigating'),
+(3,'In Progress','Closed',4,DATE_SUB(NOW(),INTERVAL 1 DAY),'Fixed');
+
+-- =====================================================
+-- SAMPLE COMMENTS
+-- =====================================================
+INSERT INTO TicketComments
+(TicketId, CommentText, CommentedBy, IsInternal, CommentDate)
+VALUES
+(1,'Still cannot login',2,FALSE,DATE_SUB(NOW(),INTERVAL 1 HOUR)),
+(1,'Checking settings',1,TRUE,DATE_SUB(NOW(),INTERVAL 45 MINUTE)),
+(2,'Useful feature',3,FALSE,DATE_SUB(NOW(),INTERVAL 22 HOUR)),
+(2,'Evaluating libraries',1,TRUE,DATE_SUB(NOW(),INTERVAL 18 HOUR));
+
+
+

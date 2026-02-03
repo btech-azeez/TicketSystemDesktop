@@ -1,0 +1,58 @@
+<Window x:Class="TicketSystemDesktop.Views.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Ticket System - Login" Height="500" Width="400"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize">
+    <Grid>
+        <!-- Background Gradient -->
+        <Border CornerRadius="0">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#7C3AED" Offset="0"/>
+                    <GradientStop Color="#4F46E5" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <!-- Main Card -->
+        <Border Background="White" CornerRadius="15" Margin="40" Padding="35" VerticalAlignment="Center">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="0" Opacity="0.2"/>
+            </Border.Effect>
+            
+            <StackPanel>
+                <TextBlock Text="Ticket System" FontSize="28" FontWeight="ExtraBold" 
+                           HorizontalAlignment="Center" Foreground="#7C3AED" Margin="0,0,0,10"/>
+                
+                <TextBlock Text="Welcome back! Please login." FontSize="14" 
+                           HorizontalAlignment="Center" Foreground="#64748B" Margin="0,0,0,30"/>
+                
+                <Label Content="Username" />
+                <TextBox x:Name="txtUsername" Text="admin" />
+                
+                <Label Content="Password"  />
+                <PasswordBox x:Name="txtPassword" />
+                
+                <Button x:Name="btnLogin" Content="LOGIN TO DASHBOARD" Height="45" 
+                        Margin="0,10,0,0" Click="BtnLogin_Click"/>
+                
+                <TextBlock x:Name="lblMessage" Foreground="#EF4444" TextAlignment="Center" 
+                           Margin="0,15,0,0" TextWrapping="Wrap" FontSize="13"/>
+                
+                <!-- Close Button for frameless window -->
+                <Button Content="Exit Application" Background="Transparent" Foreground="#94A3B8" 
+                        FontSize="12" Margin="0,20,0,0" Click="BtnExit_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <TextBlock Text="{TemplateBinding Content}" HorizontalAlignment="Center" Cursor="Hand"/>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
